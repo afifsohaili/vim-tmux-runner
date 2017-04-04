@@ -417,6 +417,20 @@ function! s:SendFileViaVtr(ensure_pane)
     endif
 endfunction
 
+function! s:SendFileAndLineViaVtr(ensure_pane)
+    let runners = s:CurrentFiletypeRunners()
+    if has_key(runners, &filetype)
+        write
+        let runner = runners[&filetype]
+        let local_file_path = expand('%')
+        let run_command = substitute(runner, '{file}', local_file_path, 'g')
+        let line = line(".")
+        call VtrSendCommand(run_command . ':' . line, a:ensure_pane)
+    else
+        echoerr 'Unable to determine runner'
+    endif
+endfunction
+
 function! s:CurrentFiletypeRunners()
     let default_runners = {
             \ 'ruby': 'ruby {file}',
@@ -443,6 +457,7 @@ function! s:DefineCommands()
     command! -bang -nargs=? VtrSendCommandToRunner call s:SendCommandToRunner(<bang>0, <f-args>)
     command! -bang -range VtrSendLinesToRunner <line1>,<line2>call s:SendLinesToRunner(<bang>0)
     command! -bang VtrSendFile call s:SendFileViaVtr(<bang>0)
+    command! -bang VtrSendFileAndLine call s:SendFileAndLineViaVtr(<bang>0)
     command! -nargs=? VtrOpenRunner call s:EnsureRunnerPane(<args>)
     command! VtrKillRunner call s:KillRunnerPane()
     command! VtrFocusRunner call s:FocusRunnerPane()
